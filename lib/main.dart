@@ -10,19 +10,26 @@ import 'package:gastos/menu/page_lista_categoria.dart';
 import 'package:gastos/menu/page_lista_sub_categoria.dart';
 import 'package:gastos/menu/page_lista_formas_pagamento.dart';
 import 'package:gastos/menu/page_backup.dart';
-import 'package:quick_actions/quick_actions.dart';
+import 'package:gastos/menu/page_lista_notificao.dart';
+import 'package:gastos/model/notificacao.dart';
+//import 'package:gastos/utils/notifications.dart';
+import 'package:notifications/notifications.dart';
 
-import 'model/database.dart';
+import 'package:quick_actions/quick_actions.dart';
+import 'dart:async';
+
+
+//import 'model/database.dart';
 
 void main() async {
-  final database = createDatabase();
+  WidgetsFlutterBinding.ensureInitialized();
 
+  //final database = createDatabase();
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
 
+class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +66,12 @@ class _MyHomePageState extends State<MyHomePage> {
   static final end = Offset.zero;
   static final curve = Curves.ease;
   static final tween = Tween(begin: begin, end: end,  ).chain(CurveTween(curve: curve));
+  StreamSubscription<NotificationEvent> _subscription;
 
   @override
   void initState() {
     super.initState();
+    initPlatformState();
     final QuickActions quickActions = QuickActions();
     quickActions.initialize((String shortcutType) {
       Navigator.push(context,
@@ -76,8 +85,31 @@ class _MyHomePageState extends State<MyHomePage> {
           icon: 'ic_plus'
       )
     ]);
-
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _subscription.cancel();
+  }
+
+  Future<void> initPlatformState() async {
+    Notifications _notifications = new Notifications();
+
+    try {
+      _subscription = _notifications.notificationStream.listen(onData);
+    } on NotificationException catch (exception) {
+      print('***** EXCEPTION NOTIFICACAO ******');
+      print(exception);
+    }
+  }
+
+  void onData(NotificationEvent event) {
+    NotificacaoDatabase().insert(Notificacao(package: event.packageName,
+      message: event.packageMessage, timeStamp: event.timeStamp.toIso8601String()));
+    print(event.packageName);
+  }
+
 
   List<Widget> _widgetOptions = <Widget>[
     ListaGastos(),
@@ -151,6 +183,18 @@ class _MyHomePageState extends State<MyHomePage> {
       },
     );
   }
+
+  Route _createRouteNotificacao() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => ListaNotificaoPagina(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -209,6 +253,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: Text('Sub Categorias'),
                 onTap: () {
                   Navigator.of(context).push(_createRouteSubCategorias());
+                },
+              ),
+              ListTile(
+                title: Text('Notificações'),
+                onTap: () {
+                  Navigator.of(context).push(_createRouteNotificacao());
                 },
               ),
               ListTile(

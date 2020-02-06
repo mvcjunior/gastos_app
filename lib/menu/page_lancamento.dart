@@ -150,6 +150,18 @@ class _LancamentoPagina extends State<LancamentoPagina> {
                   }
                 },
               ),
+              TextFormField(
+                keyboardType: TextInputType.number,
+                controller: valorController,
+                decoration: InputDecoration(
+                    prefixText: moeda,
+                    labelText: 'Valor'),
+                validator: (valor) {
+                  if (valor == '0,00')
+                    return '';
+                  return null;
+                },
+              ),
               FutureBuilder<List<Categoria>>(
                 future: _dropDownCategoria,
                 builder: (BuildContext context, AsyncSnapshot<List<Categoria>> snapshot) {
@@ -249,18 +261,6 @@ class _LancamentoPagina extends State<LancamentoPagina> {
                     },
                     value: _currentFormaPagamento,
                   );
-                },
-              ),
-              TextFormField(
-                keyboardType: TextInputType.number,
-                controller: valorController,
-                decoration: InputDecoration(
-                    prefixText: moeda,
-                    labelText: 'Valor'),
-                validator: (valor) {
-                  if (valor == '0,00')
-                    return '';
-                  return null;
                 },
               ),
               Row(

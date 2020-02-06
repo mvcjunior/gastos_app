@@ -7,7 +7,10 @@ import 'package:sqflite/sqflite.dart';
 createDatabase() async {
   String databasesPath = await getDatabasesPath();
   String dbPath = join(databasesPath, 'gastos.db');
-  var database = await openDatabase(dbPath, version: 3, onCreate: populateDb, onUpgrade: upgradeDb   );
+  var database = await openDatabase(dbPath, version: 4, onCreate: populateDb, onUpgrade: upgradeDb   );
+  database.getVersion().then( (version) {
+    print ('VERSÃO BANCO DE DADOS $version');
+  });
   return database;
 }
 
@@ -64,36 +67,26 @@ void populateDb(Database database, int version) async {
       "parcela INTEGER "
       ")");
   print('CRIEI lancamentos_futuros');
+
+  await database.execute("CREATE TABLE notificacao ("
+      "id INTEGER PRIMARY KEY, "
+      "package TEXT, "
+      "message TEXT, "
+      "time_stamp TEXT "
+      ")");
+  print('CRIEI notificacoes');
 }
 
 void upgradeDb(Database database, int atual, int nova) async {
   print ('upgradeDb');
   print (atual);
   print (nova);
-
-  await database.execute("CREATE TABLE lancamentos_futuros ("
+  await database.execute("CREATE TABLE notificacao ("
       "id INTEGER PRIMARY KEY, "
-      "id_lancamento INTEGER, "
-      "id_sub_categoria INTEGER, "
-      "data INTEGER, "
-      "valor INTEGER, "
-      "id_forma_pagamento INTEGER, "
-      "parcela INTEGER "
+      "package TEXT, "
+      "message TEXT, "
+      "time_stamp TEXT "
       ")");
-  print('CRIEI lancamentos_futuros');
-
-  await database.execute("ALTER TABLE forma_pagamento ADD "
-      "dia_pagamento INTEGER");
-
-  await database.execute("ALTER TABLE forma_pagamento ADD "
-      "melhor_data INTEGER");
-
-  print('ALTEREI forma_pagamento');
-
-  await database.execute("ALTER TABLE lancamentos ADD "
-      "parcelado TEXT  ");
-  await database.execute("ALTER TABLE lancamentos ADD "
-      "quantidade_parcelas INTEGER");
-  print('ALTEREI lancamentos');
+  print('CRIEI notificacoes');
 
 }
